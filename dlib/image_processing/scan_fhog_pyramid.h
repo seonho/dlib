@@ -10,6 +10,11 @@
 #include "../array2d.h"
 #include "object_detector.h"
 
+#ifdef _PARALLEL
+#include "../concurrency.h"
+#include "scan_fhog_pyramid_parallel.h"
+#endif // _PARALLEL
+
 namespace dlib
 {
 
@@ -630,9 +635,15 @@ namespace dlib
     {
         unsigned long width, height;
         compute_fhog_window_size(width,height);
+        #ifndef _PARALLEL
         impl::create_fhog_pyramid<Pyramid_type>(img, fe, feats, cell_size, height,
             width, min_pyramid_layer_width, min_pyramid_layer_height,
             max_pyramid_levels);
+        #else
+        impl::create_fhog_pyramid_parallel<Pyramid_type>(img, fe, feats, cell_size, height,
+            width, min_pyramid_layer_width, min_pyramid_layer_height,
+            max_pyramid_levels);
+        #endif
     }
 
 // ----------------------------------------------------------------------------------------
@@ -851,8 +862,13 @@ namespace dlib
         unsigned long width, height;
         compute_fhog_window_size(width,height);
 
+        #ifndef _PARALLEL
         impl::detect_from_fhog_pyramid<pyramid_type>(feats, fe, w, thresh,
             height-2*padding, width-2*padding, cell_size, height, width, dets);
+        #else
+        impl::detect_from_fhog_pyramid_parallel<pyramid_type>(feats, fe, w, thresh,
+            height-2*padding, width-2*padding, cell_size, height, width, dets);
+        #endif
     }
 
 // ----------------------------------------------------------------------------------------
